@@ -1,0 +1,24 @@
+{
+  "framework": "PyTorch",
+  "dataset_path": "D:\\Plant_disease\\PlantVillage",
+  "train_size": 43444,
+  "val_size": 10861,
+  "total_size": 54305,
+  "num_classes": 38,
+  "image_size": [
+    224,
+    224
+  ],
+  "channels": 3,
+  "pixel_range": [
+    0.0,
+    1.0
+  ],
+  "batch_size": 32,
+  "seed": 42,
+  "train_augmentation": [
+    "RandomHorizontalFlip(p=0.5)",
+    "RandomRotation(degrees=10)"
+  ],
+  "validation_augmentation": []
+}

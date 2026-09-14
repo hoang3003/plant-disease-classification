@@ -39,34 +39,34 @@ File dùng để khai báo các thư viện Python cần cài đặt cho project
 
 Thư mục chứa các notebook theo từng bước của quy trình xây dựng mô hình.
 
-| File | Mục đích |
-| --- | --- |
-| `01_eda.ipynb` | Khám phá dữ liệu: xem số lượng lớp, phân bố ảnh, hiển thị ảnh mẫu và nhận xét ban đầu. |
-| `02_preprocessing.ipynb` | Kiểm tra cấu trúc dữ liệu `train/val`, đếm số ảnh theo từng nhãn và tính tỉ lệ chia dữ liệu. |
-| `03_simple_cnn.ipynb` | Xây dựng và huấn luyện mô hình CNN cơ bản để làm baseline. |
-| `04_complex_cnn.ipynb` | Xây dựng mô hình CNN phức tạp hơn, có thể thêm nhiều tầng convolution, dropout, batch normalization. |
+| File                         | Mục đích                                                                                              |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `01_eda.ipynb`               | Khám phá dữ liệu: xem số lượng lớp, phân bố ảnh, hiển thị ảnh mẫu và nhận xét ban đầu.                |
+| `02_preprocessing.ipynb`     | Kiểm tra cấu trúc dữ liệu `train/val`, đếm số ảnh theo từng nhãn và tính tỉ lệ chia dữ liệu.          |
+| `03_simple_cnn.ipynb`        | Xây dựng và huấn luyện mô hình CNN cơ bản để làm baseline.                                            |
+| `04_complex_cnn.ipynb`       | Xây dựng mô hình CNN phức tạp hơn, có thể thêm nhiều tầng convolution, dropout, batch normalization.  |
 | `05_transfer_learning.ipynb` | Huấn luyện mô hình bằng transfer learning từ các mạng pretrained như MobileNet, ResNet, EfficientNet. |
-| `06_comparison.ipynb` | So sánh kết quả giữa các mô hình bằng accuracy, loss, confusion matrix và các metric đánh giá khác. |
+| `06_comparison.ipynb`        | So sánh kết quả giữa các mô hình bằng accuracy, loss, confusion matrix và các metric đánh giá khác.   |
 
 ### `src/`
 
 Thư mục chứa code Python dùng lại nhiều lần trong các notebook. Việc tách code vào `src/` giúp notebook gọn hơn và project dễ bảo trì hơn.
 
-| File | Mục đích |
-| --- | --- |
+| File            | Mục đích                                                                                                   |
+| --------------- | ---------------------------------------------------------------------------------------------------------- |
 | `data_utils.py` | Chứa các hàm xử lý dữ liệu: đọc ảnh, tạo dataset, resize ảnh, chuẩn hóa pixel, augmentation và chia batch. |
-| `models.py` | Chứa các hàm hoặc class định nghĩa kiến trúc mô hình: simple CNN, complex CNN, transfer learning model. |
-| `evaluation.py` | Chứa các hàm đánh giá mô hình: vẽ learning curve, confusion matrix, classification report và lưu kết quả. |
+| `models.py`     | Chứa các hàm hoặc class định nghĩa kiến trúc mô hình: simple CNN, complex CNN, transfer learning model.    |
+| `evaluation.py` | Chứa các hàm đánh giá mô hình: vẽ learning curve, confusion matrix, classification report và lưu kết quả.  |
 
 ### `outputs/`
 
 Thư mục lưu các kết quả sinh ra trong quá trình chạy notebook.
 
-| Thư mục | Mục đích |
-| --- | --- |
+| Thư mục            | Mục đích                                                                  |
+| ------------------ | ------------------------------------------------------------------------- |
 | `outputs/figures/` | Lưu biểu đồ, ảnh trực quan hóa dữ liệu, confusion matrix, learning curve. |
-| `outputs/models/` | Lưu model đã huấn luyện, checkpoint hoặc file trọng số. |
-| `outputs/results/` | Lưu bảng kết quả, metric, file CSV hoặc báo cáo so sánh mô hình. |
+| `outputs/models/`  | Lưu model đã huấn luyện, checkpoint hoặc file trọng số.                   |
+| `outputs/results/` | Lưu bảng kết quả, metric, file CSV hoặc báo cáo so sánh mô hình.          |
 
 ## Dữ Liệu
 
@@ -121,10 +121,10 @@ pip install -r requirements.txt
 
 Notebook `02_preprocessing.ipynb` đã được chạy với dataset PlantVillage và cho kết quả:
 
-| Split | Số ảnh | Tỉ lệ |
-| --- | ---: | ---: |
-| `train` | 43,444 | 80% |
-| `val` | 10,861 | 20% |
+| Split   | Số ảnh | Tỉ lệ |
+| ------- | -----: | ----: |
+| `train` | 43,444 |   80% |
+| `val`   | 10,861 |   20% |
 
 Tổng số ảnh: **54,305**  
 Số nhãn: **38**
