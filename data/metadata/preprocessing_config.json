@@ -1,0 +1,23 @@
+{
+  "framework": "PyTorch",
+  "image_size": [
+    224,
+    224
+  ],
+  "channels": 3,
+  "pixel_range_after_to_tensor": [
+    0.0,
+    1.0
+  ],
+  "batch_size": 32,
+  "seed": 42,
+  "num_classes": 38,
+  "train_size": 43444,
+  "val_size": 10851,
+  "removed_cross_split_exact_duplicates": 10,
+  "train_augmentation": [
+    "RandomHorizontalFlip(p=0.5)",
+    "RandomRotation(10 degrees)",
+    "ColorJitter(brightness=0.1, contrast=0.1)"
+  ]
+}
