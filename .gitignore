@@ -1,2 +1,40 @@
-.venv/
 .env
+.venv/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Local/raw data archives
+PlantVillage/
+data/raw/
+data/PlantVillage/
+*.zip
+*.tar
+*.tar.gz
+*.rar
+
+# Generated intermediate metadata
+data/metadata/clean_metadata.csv
+data/metadata/class_to_idx.json
+data/metadata/class_weights.json
+data/metadata/preprocessing_config.json
+
+# Generated figures and heavy training artifacts
+outputs/figures/
+outputs/models/
+*.pt
+*.pth
+*.ckpt
+
+# Generated result files that can be rebuilt
+outputs/results/preprocessing_metadata.csv
+outputs/results/preprocessing_summary.json
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
