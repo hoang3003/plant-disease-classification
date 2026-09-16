@@ -1,24 +1,63 @@
 {
-  "framework": "PyTorch",
-  "dataset_path": "D:\\Plant_disease\\PlantVillage",
-  "train_size": 43444,
-  "val_size": 10861,
-  "total_size": 54305,
-  "num_classes": 38,
+  "seed": 42,
   "image_size": [
     224,
     224
   ],
-  "channels": 3,
-  "pixel_range": [
-    0.0,
-    1.0
-  ],
   "batch_size": 32,
-  "seed": 42,
-  "train_augmentation": [
-    "RandomHorizontalFlip(p=0.5)",
-    "RandomRotation(degrees=10)"
-  ],
-  "validation_augmentation": []
+  "num_classes": 38,
+  "paths": {
+    "metadata": "data/metadata/metadata.csv",
+    "duplicate_issues": "data/metadata/duplicate_images.csv",
+    "near_duplicate_issues": "data/metadata/near_duplicates.csv",
+    "data_split": "outputs/results/data_split.csv",
+    "class_names": "outputs/results/class_names.json"
+  },
+  "cleaning": {
+    "metadata_rows_before_cleaning": 54305,
+    "broken_images": 0,
+    "missing_files": 0,
+    "label_conflict_groups": 0,
+    "label_conflict_images": 0,
+    "exact_duplicate_copies_removed": 21,
+    "rows_after_cleaning": 54284
+  },
+  "split_strategy": {
+    "test": "All usable original val images; if a duplicate/near-duplicate group touches original val, the whole group is assigned to test.",
+    "train_validation_source": "Usable original train images not assigned to a test group.",
+    "validation_fraction_of_remaining_train": 0.125,
+    "splitter": "StratifiedGroupKFold",
+    "n_splits": 8,
+    "selected_fold": null,
+    "stratify_column": "class_name",
+    "group_column": "group_id"
+  },
+  "final_split_counts": {
+    "train": 37538,
+    "validation": 5363,
+    "test": 11383
+  },
+  "custom_cnn_preprocessing": {
+    "color": "RGB",
+    "resize": [
+      224,
+      224
+    ],
+    "pixel_range": [
+      0.0,
+      1.0
+    ],
+    "train_augmentation": {
+      "horizontal_flip_probability": 0.5,
+      "rotation_degrees": 10,
+      "zoom_scale": [
+        0.9,
+        1.1
+      ],
+      "contrast_jitter": 0.1
+    },
+    "validation_augmentation": null,
+    "test_augmentation": null
+  },
+  "transfer_learning_preprocessing": "Use the preprocessing/normalization required by the selected pretrained weights in the transfer-learning notebook."
 }
