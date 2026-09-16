@@ -42,7 +42,7 @@ Thư mục chứa các notebook theo từng bước của quy trình xây dựng
 | File                         | Mục đích                                                                                              |
 | ---------------------------- | ----------------------------------------------------------------------------------------------------- |
 | `01_eda.ipynb`               | Khám phá dữ liệu: xem số lượng lớp, phân bố ảnh, hiển thị ảnh mẫu và nhận xét ban đầu.                |
-| `02_preprocessing.ipynb`     | Kiểm tra cấu trúc dữ liệu `train/val`, đếm số ảnh theo từng nhãn và tính tỉ lệ chia dữ liệu.          |
+| `02_preprocessing.ipynb`     | Làm sạch danh sách ảnh, gom nhóm ảnh trùng, chia train/validation/test và tạo pipeline ảnh.           |
 | `03_simple_cnn.ipynb`        | Xây dựng và huấn luyện mô hình CNN cơ bản để làm baseline.                                            |
 | `04_complex_cnn.ipynb`       | Xây dựng mô hình CNN phức tạp hơn, có thể thêm nhiều tầng convolution, dropout, batch normalization.  |
 | `05_transfer_learning.ipynb` | Huấn luyện mô hình bằng transfer learning từ các mạng pretrained như MobileNet, ResNet, EfficientNet. |
@@ -88,13 +88,7 @@ PlantVillage/
     └── ...
 ```
 
-Trong máy hiện tại, notebook tiền xử lý đang đọc dữ liệu từ:
-
-```text
-C:\Users\MY PC\Documents\DL\project 1\archive\PlantVillage
-```
-
-Nếu chuyển project sang máy khác, cần cập nhật lại biến `DATA_DIR` trong `notebooks/02_preprocessing.ipynb` cho đúng vị trí dataset.
+Notebook đọc `DATA_DIR` từ file `.env` ở thư mục project; nếu không có, mặc định dùng thư mục `PlantVillage` nằm cạnh project. Khi chuyển máy, cập nhật `DATA_DIR` trong `.env`.
 
 ## Cách Chạy Project
 
@@ -121,12 +115,13 @@ pip install -r requirements.txt
 
 Notebook `02_preprocessing.ipynb` đã được chạy với dataset PlantVillage và cho kết quả:
 
-| Split   | Số ảnh | Tỉ lệ |
-| ------- | -----: | ----: |
-| `train` | 43,444 |   80% |
-| `val`   | 10,861 |   20% |
+| Split        | Số ảnh | Tỉ lệ |
+| ------------ | -----: | ----: |
+| `train`      | 37,538 | 69.15% |
+| `validation` | 5,363  | 9.88% |
+| `test`       | 11,383 | 20.97% |
 
-Tổng số ảnh: **54,305**  
+Tổng số ảnh sau khi loại 21 bản sao trùng hoàn toàn: **54,284**
 Số nhãn: **38**
 
 ## Ghi Chú
