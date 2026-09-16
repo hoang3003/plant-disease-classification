@@ -1,10 +1,5 @@
 {
   "seed": 42,
-  "image_size": [
-    224,
-    224
-  ],
-  "batch_size": 32,
   "num_classes": 38,
   "paths": {
     "metadata": "data/metadata/metadata.csv",
@@ -23,8 +18,8 @@
     "rows_after_cleaning": 54284
   },
   "split_strategy": {
-    "test": "All usable original val images; if a duplicate/near-duplicate group touches original val, the whole group is assigned to test.",
-    "train_validation_source": "Usable original train images not assigned to a test group.",
+    "test": "All usable original val images and their duplicate groups.",
+    "train_validation_source": "Usable original train images outside test groups.",
     "validation_fraction_of_remaining_train": 0.125,
     "splitter": "StratifiedGroupKFold",
     "n_splits": 8,
@@ -37,27 +32,16 @@
     "validation": 5363,
     "test": 11383
   },
-  "custom_cnn_preprocessing": {
-    "color": "RGB",
-    "resize": [
-      224,
-      224
-    ],
-    "pixel_range": [
-      0.0,
-      1.0
-    ],
-    "train_augmentation": {
-      "horizontal_flip_probability": 0.5,
-      "rotation_degrees": 10,
-      "zoom_scale": [
-        0.9,
-        1.1
-      ],
-      "contrast_jitter": 0.1
+  "image_handling": {
+    "image_path_root": "project_parent",
+    "image_path_column": "image_path",
+    "output_mode": "RGB",
+    "alpha_background": "white",
+    "source_mode_counts": {
+      "RGB": 54283,
+      "RGBA": 1
     },
-    "validation_augmentation": null,
-    "test_augmentation": null
-  },
-  "transfer_learning_preprocessing": "Use the preprocessing/normalization required by the selected pretrained weights in the transfer-learning notebook."
+    "converted_images": 1,
+    "converted_dir": "data/processed_rgb"
+  }
 }
