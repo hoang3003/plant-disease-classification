@@ -28,9 +28,10 @@ DATA_DIR = Path(
 TRAIN_DIR = DATA_DIR / "train"
 VAL_DIR = DATA_DIR / "val"
 
-# Tìm ảnh trùng hoàn toàn
-import hashlib
+def load_metadata(metadata_path):
+    return pd.read_csv(metadata_path)
 
+#Tìm ảnh trùng hoàn toàn
 def get_sha256(path):
     h = hashlib.sha256()
     with open(path, "rb") as f:
@@ -41,43 +42,23 @@ def get_sha256(path):
             h.update(chunk)
     return h.hexdigest()
 
-df["sha256"] = df["relative_path"].apply(
-    lambda x: get_sha256(DATA_DIR / x)
-)
+def find_exact_duplicates(df, data_dir):
+    df = df.copy()
 
-duplicate_df = df[
-    df.duplicated(
-        subset="sha256",
-        keep=False
+    df["sha256"] = df["relative_path"].apply(
+        lambda x: get_sha256(data_dir / x)
     )
-].sort_values("sha256")
 
-duplicate_df[
-    ["relative_path", "split", "class_name", "sha256"]
-]
+    duplicate_df = df[
+        df.duplicated(
+            subset="sha256",
+            keep=False
+        )
+    ].sort_values("sha256")
 
-# Kiểm tra trùng hoàn toàn giữa train và val
-duplicate_cross_split = (
-    duplicate_df
-    .groupby("sha256")["split"]
-    .nunique()
-)
+    return df, duplicate_df
 
-cross_split_hashes = duplicate_cross_split[
-    duplicate_cross_split > 1
-].index
-
-cross_split_duplicates = duplicate_df[
-    duplicate_df["sha256"].isin(
-        cross_split_hashes
-    )
-]
-
-cross_split_duplicates[
-    ["relative_path", "split", "class_name", "sha256"]
-]
-
-# Tìm ảnh gần trùng
+#Tìm ảnh gần trùng
 def get_phash(path):
 
     try:
@@ -89,40 +70,36 @@ def get_phash(path):
     except Exception:
         return None
 
-df["phash"] = df["relative_path"].apply(
-    lambda x: str(get_phash(DATA_DIR / x))
-)
+def find_near_duplicates(df, data_dir, threshold=5):
+    df = df.copy()
 
-near_duplicates = []
+    df["phash"] = df["relative_path"].apply(
+        lambda x: get_phash(data_dir / x)
+    )
 
-for class_name, group in df.groupby("class_name"):
+    near_duplicates = []
 
-    group = group.reset_index(drop=True)
+    for class_name, group in df.groupby("class_name"):
 
-    hashes = [
-        imagehash.hex_to_hash(x)
-        for x in group["phash"]
-        if pd.notna(x)
-    ]
+        group = group.reset_index(drop=True)
 
-    paths = group["relative_path"].tolist()
+        for i in range(len(group)):
+            for j in range(i + 1, len(group)):
 
-    for i in range(len(hashes)):
+                hash_i = group.loc[i, "phash"]
+                hash_j = group.loc[j, "phash"]
 
-        for j in range(i + 1, len(hashes)):
+                if hash_i is None or hash_j is None:
+                    continue
 
-            distance = hashes[i] - hashes[j]
+                distance = hash_i - hash_j
 
-            if distance <= 5:
+                if distance <= threshold:
+                    near_duplicates.append({
+                        "class_name": class_name,
+                        "image_1": group.loc[i, "relative_path"],
+                        "image_2": group.loc[j, "relative_path"],
+                        "phash_distance": distance
+                    })
 
-                near_duplicates.append({
-                    "class_name": class_name,
-                    "image_1": paths[i],
-                    "image_2": paths[j],
-                    "phash_distance": distance
-                })
-
-near_duplicate_df = pd.DataFrame(
-    near_duplicates
-)
-near_duplicate_df.head()
+    return pd.DataFrame(near_duplicates)
