@@ -28,7 +28,7 @@
     "validation_fraction_of_remaining_train": 0.125,
     "splitter": "StratifiedGroupKFold",
     "n_splits": 8,
-    "selected_fold": null,
+    "selected_fold": 4,
     "stratify_column": "class_name",
     "group_column": "group_id"
   },
