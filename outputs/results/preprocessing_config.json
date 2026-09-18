@@ -12,6 +12,7 @@
     "near_duplicate_issues": "data/metadata/near_duplicates.csv",
     "data_split": "outputs/results/data_split.csv",
     "class_names": "outputs/results/class_names.json",
+    "same_class_candidate_report": "outputs/results/same_class_near_duplicate_candidates.csv",
     "cross_class_candidate_report": "outputs/results/cross_class_near_duplicate_candidates.csv"
   },
   "cleaning": {
@@ -21,14 +22,16 @@
     "label_conflict_groups": 0,
     "label_conflict_images": 0,
     "exact_duplicate_copies_removed": 21,
-    "same_class_candidates_grouped": 1165,
+    "same_class_phash_candidates": 1165,
+    "same_class_near_duplicates_confirmed": 60,
     "same_class_candidates_skipped": 0,
     "cross_class_phash_candidates": 300,
     "cross_class_near_duplicates_confirmed": 0,
     "rows_after_cleaning": 54284
   },
   "split_strategy": {
-    "same_class_grouping": "Toàn bộ cặp cùng lớp do EDA tìm bằng pHash",
+    "same_class_max_pixel_mae": 0.08,
+    "same_class_min_pixel_correlation": 0.9,
     "cross_class_phash_threshold": 5,
     "cross_class_max_pixel_mae": 0.08,
     "cross_class_min_pixel_correlation": 0.9,
@@ -37,14 +40,14 @@
     "validation_fraction_of_remaining_train": 0.125,
     "splitter": "StratifiedGroupKFold",
     "n_splits": 8,
-    "selected_fold": 4,
+    "selected_fold": 3,
     "stratify_column": "class_name",
     "group_column": "group_id"
   },
   "final_split_counts": {
-    "train": 37538,
-    "validation": 5363,
-    "test": 11383
+    "train": 37984,
+    "validation": 5427,
+    "test": 10873
   },
   "custom_cnn_preprocessing": {
     "color": "RGB",
