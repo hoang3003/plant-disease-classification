@@ -11,7 +11,8 @@
     "duplicate_issues": "data/metadata/duplicate_images.csv",
     "near_duplicate_issues": "data/metadata/near_duplicates.csv",
     "data_split": "outputs/results/data_split.csv",
-    "class_names": "outputs/results/class_names.json"
+    "class_names": "outputs/results/class_names.json",
+    "cross_class_candidate_report": "outputs/results/cross_class_near_duplicate_candidates.csv"
   },
   "cleaning": {
     "metadata_rows_before_cleaning": 54305,
@@ -20,11 +21,19 @@
     "label_conflict_groups": 0,
     "label_conflict_images": 0,
     "exact_duplicate_copies_removed": 21,
+    "same_class_candidates_grouped": 1165,
+    "same_class_candidates_skipped": 0,
+    "cross_class_phash_candidates": 300,
+    "cross_class_near_duplicates_confirmed": 0,
     "rows_after_cleaning": 54284
   },
   "split_strategy": {
-    "test": "All usable original val images; if a duplicate/near-duplicate group touches original val, the whole group is assigned to test.",
-    "train_validation_source": "Usable original train images not assigned to a test group.",
+    "same_class_grouping": "Toàn bộ cặp cùng lớp do EDA tìm bằng pHash",
+    "cross_class_phash_threshold": 5,
+    "cross_class_max_pixel_mae": 0.08,
+    "cross_class_min_pixel_correlation": 0.9,
+    "test": "Toàn bộ ảnh val gốc còn dùng được; nếu nhóm ảnh trùng hoặc gần trùng có ảnh thuộc val gốc, đưa cả nhóm vào test.",
+    "train_validation_source": "Ảnh train gốc còn dùng được và không thuộc nhóm đã đưa vào test.",
     "validation_fraction_of_remaining_train": 0.125,
     "splitter": "StratifiedGroupKFold",
     "n_splits": 8,
@@ -59,5 +68,5 @@
     "validation_augmentation": null,
     "test_augmentation": null
   },
-  "transfer_learning_preprocessing": "Use the preprocessing/normalization required by the selected pretrained weights in the transfer-learning notebook."
+  "transfer_learning_preprocessing": "Dùng make_transfer_transforms(weights) với đúng bộ trọng số pretrained đã chọn; phép chuẩn hóa lấy từ weights.transforms()."
 }
