@@ -1,10 +1,10 @@
-# Import thư viện
+"""Các tiện ích dùng chung cho EDA, preprocessing và huấn luyện mô hình."""
+
 from concurrent.futures import ThreadPoolExecutor
-from pathlib import Path, PurePosixPath
-import os
 import hashlib
 import json
-import random
+import os
+from pathlib import Path, PurePosixPath
 
 import numpy as np
 import pandas as pd
@@ -16,7 +16,6 @@ import torch
 from torch.utils.data import DataLoader, Dataset
 from torchvision import transforms
 
-# Load data
 PROJECT_DIR = Path(__file__).resolve().parent.parent
 METADATA_DIR = PROJECT_DIR / "data" / "metadata"
 
@@ -31,8 +30,17 @@ DATA_DIR = DATA_DIR.resolve()
 TRAIN_DIR = DATA_DIR / "train"
 VAL_DIR = DATA_DIR / "val"
 
-#Tìm ảnh trùng hoàn toàn
+# Các hằng số dùng chung
+SPLIT_NAMES = ("train", "validation", "test")
+ORIGINAL_SPLITS = ("train", "val")
+NEAR_DUPLICATE_COLUMNS = [
+    "class_name", "image_1", "image_2", "phash_distance"
+]
+
+
+# Phát hiện ảnh trùng
 def get_sha256(path):
+    """Tính mã SHA-256 của một file ảnh để phát hiện bản sao hoàn toàn."""
     h = hashlib.sha256()
     with open(path, "rb") as f:
         for chunk in iter(
@@ -43,6 +51,7 @@ def get_sha256(path):
     return h.hexdigest()
 
 def find_exact_duplicates(df, data_dir):
+    """Tính SHA-256 cho các ảnh và trả về những ảnh có nội dung giống hệt."""
     df = df.copy()
 
     with ThreadPoolExecutor(max_workers=16) as pool:
@@ -60,9 +69,8 @@ def find_exact_duplicates(df, data_dir):
 
     return df, duplicate_df
 
-#Tìm ảnh gần trùng
 def get_phash(path):
-
+    """Tính perceptual hash của ảnh; trả về None nếu ảnh không đọc được."""
     try:
         with Image.open(path) as img:
             return imagehash.phash(
@@ -73,6 +81,7 @@ def get_phash(path):
         return None
 
 def find_near_duplicates(df, data_dir, threshold=5):
+    """Tìm các cặp ảnh gần giống nhau trong cùng một class bằng pHash."""
     if not 0 <= threshold <= 64:
         raise ValueError("threshold phải nằm trong khoảng từ 0 đến 64.")
     df = df.copy()
@@ -110,7 +119,7 @@ def find_near_duplicates(df, data_dir, threshold=5):
 
 
 def _cross_class_phash_pairs(rows, threshold):
-    """Tìm đủ các cặp khác lớp có khoảng cách pHash không quá threshold."""
+    """Tìm ứng viên gần giống giữa các class bằng bucket pHash."""
     if not 0 <= threshold < 64:
         raise ValueError("threshold phải nằm trong khoảng từ 0 đến 63.")
 
@@ -159,7 +168,7 @@ def find_cross_class_near_duplicates(df, data_dir, threshold=5,
                                      max_pixel_mae=0.08,
                                      min_pixel_correlation=0.90,
                                      max_workers=16):
-    """Tạo danh sách ứng viên khác lớp và xác nhận bằng độ giống pixel."""
+    """Tìm và xác nhận ảnh gần trùng nhưng được gán khác class."""
     if not 0 <= max_pixel_mae <= 1:
         raise ValueError("max_pixel_mae phải nằm trong khoảng từ 0 đến 1.")
     if not -1 <= min_pixel_correlation <= 1:
@@ -192,6 +201,7 @@ def find_cross_class_near_duplicates(df, data_dir, threshold=5,
     pixel_cache = {}
 
     def pixels(relative_path):
+        """Đọc, đổi kích thước và cache pixel của một ảnh."""
         if relative_path not in pixel_cache:
             with Image.open(_image_path(data_dir, relative_path)) as image:
                 resized = image.convert("RGB").resize((96, 96))
@@ -225,7 +235,6 @@ def find_cross_class_near_duplicates(df, data_dir, threshold=5,
     return pd.DataFrame(candidates, columns=columns)
 
 
-# Các hàm dùng cho 02_preprocessing.ipynb.
 SPLIT_COLUMNS = [
     "relative_path", "class_name", "class_id", "split", "original_split", "group_id"
 ]
@@ -240,23 +249,32 @@ def normalize_relpath(value):
 
 
 def _normalize_path_column(dataframe, column):
+    """Chuẩn hóa toàn bộ đường dẫn trong một cột DataFrame."""
     if dataframe[column].isna().any():
         raise ValueError(f"Cột {column} có đường dẫn bị thiếu.")
     dataframe[column] = dataframe[column].astype(str).map(normalize_relpath)
 
 
 def _image_path(data_dir, relative_path):
+    """Ghép thư mục dữ liệu với đường dẫn ảnh tương đối an toàn."""
     return Path(data_dir).joinpath(*PurePosixPath(normalize_relpath(relative_path)).parts)
 
 
 def _read_csv_or_empty(path, expected_columns):
+    """Đọc CSV hoặc trả về DataFrame rỗng nếu file không có dòng dữ liệu."""
     try:
         return pd.read_csv(path)
     except pd.errors.EmptyDataError:
         return pd.DataFrame(columns=expected_columns)
 
 
+def _empty_broken_dataframe():
+    """Tạo DataFrame rỗng đúng schema cho danh sách ảnh lỗi."""
+    return pd.DataFrame(columns=["relative_path", "error"])
+
+
 def _require_columns(dataframe, columns, filename):
+    """Báo lỗi nếu DataFrame thiếu một hoặc nhiều cột bắt buộc."""
     missing = set(columns) - set(dataframe.columns)
     if missing:
         raise ValueError(f"{filename} thiếu các cột: {sorted(missing)}")
@@ -279,7 +297,7 @@ def load_preprocessing_inputs(metadata_path, duplicate_path, near_duplicate_path
     metadata["class_name"] = metadata["class_name"].astype(str)
     if not metadata["relative_path"].is_unique:
         raise ValueError("metadata.csv có relative_path bị lặp.")
-    if not metadata["original_split"].isin(("train", "val")).all():
+    if not metadata["original_split"].isin(ORIGINAL_SPLITS).all():
         raise ValueError("metadata.csv chỉ được chứa split train hoặc val.")
     path_parts = metadata["relative_path"].map(lambda path: PurePosixPath(path).parts)
     invalid_paths = [
@@ -312,7 +330,7 @@ def load_preprocessing_inputs(metadata_path, duplicate_path, near_duplicate_path
         )
 
     near_duplicate_df = _read_csv_or_empty(
-        near_duplicate_path, ["class_name", "image_1", "image_2", "phash_distance"]
+        near_duplicate_path, NEAR_DUPLICATE_COLUMNS
     )
     _require_columns(
         near_duplicate_df,
@@ -345,7 +363,7 @@ def load_preprocessing_inputs(metadata_path, duplicate_path, near_duplicate_path
         _require_columns(broken_df, ("relative_path", "error"), "broken_images.csv")
         _normalize_path_column(broken_df, "relative_path")
     else:
-        broken_df = pd.DataFrame(columns=["relative_path", "error"])
+        broken_df = _empty_broken_dataframe()
 
     return metadata, duplicate_df, near_duplicate_df, broken_df
 
@@ -357,7 +375,7 @@ def find_broken_and_missing_images(metadata, data_dir, broken_df=None,
     Việc kiểm tra lại hữu ích khi dataset đã thay đổi sau khi chạy EDA.
     """
     if broken_df is None:
-        broken_df = pd.DataFrame(columns=["relative_path", "error"])
+        broken_df = _empty_broken_dataframe()
     broken_paths = set(
         broken_df.get("relative_path", pd.Series(dtype=str)).dropna().astype(str)
     )
@@ -368,6 +386,7 @@ def find_broken_and_missing_images(metadata, data_dir, broken_df=None,
 
     if verify_images:
         def verify_one(relative_path):
+            """Kiểm tra một ảnh có tồn tại và giải mã được hay không."""
             try:
                 with Image.open(_image_path(data_dir, relative_path)) as image:
                     image.verify()
@@ -410,12 +429,14 @@ def build_duplicate_groups(metadata, duplicate_df, near_duplicate_df,
     rank = {path: 0 for path in paths}
 
     def find(path):
+        """Tìm gốc của một group bằng path compression."""
         while parent[path] != path:
             parent[path] = parent[parent[path]]
             path = parent[path]
         return path
 
     def union(first, second):
+        """Gộp hai ảnh vào cùng group bằng union by rank."""
         if first not in parent or second not in parent:
             return
         root_a, root_b = find(first), find(second)
@@ -438,9 +459,8 @@ def build_duplicate_groups(metadata, duplicate_df, near_duplicate_df,
                 union(members[0], path)
 
     if not near_duplicate_df.empty:
-        _require_columns(
-            near_duplicate_df, ("image_1", "image_2"), "near_duplicates.csv"
-        )
+        _require_columns(near_duplicate_df, ("image_1", "image_2"),
+                         "near_duplicates.csv")
         for row in near_duplicate_df.itertuples(index=False):
             union(normalize_relpath(row.image_1), normalize_relpath(row.image_2))
 
@@ -473,6 +493,7 @@ def clean_metadata(metadata, duplicate_df, broken_paths, missing_paths,
     excluded_reasons = {}
 
     def exclude(path, reason):
+        """Ghi nhận lý do loại một ảnh khỏi metadata sạch."""
         excluded_reasons.setdefault(normalize_relpath(path), set()).add(reason)
 
     for path in broken_paths:
@@ -652,7 +673,7 @@ def validate_split(split_df, near_duplicate_df, class_names):
     class_split_counts["total"] = class_split_counts.sum(axis=1)
 
     missing_class_rows = []
-    for split_name in ("train", "validation", "test"):
+    for split_name in SPLIT_NAMES:
         class_counts = split_df.loc[
             split_df["split"] == split_name, "class_name"
         ].value_counts().reindex(class_names, fill_value=0)
@@ -706,14 +727,17 @@ class PlantVillageSplitDataset(Dataset):
     """Mở ảnh theo nhu cầu; luôn chuyển RGB trước khi áp dụng transform."""
 
     def __init__(self, dataframe, data_dir, transform=None):
+        """Khởi tạo Dataset từ bảng split và thư mục ảnh."""
         self.dataframe = dataframe.reset_index(drop=True).copy()
         self.data_dir = Path(data_dir)
         self.transform = transform
 
     def __len__(self):
+        """Trả về số lượng ảnh trong Dataset."""
         return len(self.dataframe)
 
     def __getitem__(self, index):
+        """Đọc một ảnh theo index và trả về tensor ảnh cùng class_id."""
         row = self.dataframe.iloc[index]
         with Image.open(_image_path(self.data_dir, row["relative_path"])) as image:
             image = image.convert("RGB")
@@ -728,7 +752,7 @@ def make_dataloaders(split_df, data_dir, train_transform, eval_transform,
     if pin_memory is None:
         pin_memory = torch.cuda.is_available()
     loaders = []
-    for split_name in ("train", "validation", "test"):
+    for split_name in SPLIT_NAMES:
         subset = split_df[split_df["split"] == split_name]
         transform = train_transform if split_name == "train" else eval_transform
         dataset = PlantVillageSplitDataset(subset, data_dir, transform=transform)
@@ -752,7 +776,11 @@ def save_preprocessing_outputs(split_df, class_names, config, split_path,
         path.parent.mkdir(parents=True, exist_ok=True)
     if save_split:
         split_df.to_csv(split_path, index=False)
-    with class_names_path.open("w", encoding="utf-8") as file:
-        json.dump(class_names, file, ensure_ascii=False, indent=2)
-    with config_path.open("w", encoding="utf-8") as file:
-        json.dump(config, file, ensure_ascii=False, indent=2)
+    class_names_path.write_text(
+        json.dumps(class_names, ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
+    config_path.write_text(
+        json.dumps(config, ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )

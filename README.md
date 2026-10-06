@@ -115,17 +115,41 @@ pip install -r requirements.txt
 
 Notebook `02_preprocessing.ipynb` đã được chạy với dataset PlantVillage và cho kết quả:
 
-| Split        | Số ảnh | Tỉ lệ |
-| ------------ | -----: | ----: |
-| `train`      | 37,538 | 69.15% |
-| `validation` | 5,363  | 9.88% |
-| `test`       | 11,383 | 20.97% |
+| Split        | Số ảnh |  Tỉ lệ |
+| ------------ | -----: | -----: |
+| `train`      | 37,984 | 69.97% |
+| `validation` |  5,427 | 10.00% |
+| `test`       | 10,873 | 20.03% |
 
 Tổng số ảnh sau khi loại 21 bản sao trùng hoàn toàn: **54,284**
 Số nhãn: **38**
+
+Quy tắc chia: toàn bộ ảnh `val` gốc và các ảnh cùng `group_id` được đưa vào
+`test`. Phần `train` gốc còn lại được chia bằng `StratifiedGroupKFold` với
+8 folds, stratify theo `class_name` và group theo `group_id`.
+
+Kiểm tra split hiện tại: **0 group leakage**, **0 confirmed near-duplicate
+leakage**, và cả 38 lớp đều xuất hiện trong cả ba split. Có 622 near-duplicate
+ứng viên chưa được xác nhận nằm khác split; các ứng viên này không được kết luận
+là leakage.
 
 ## Ghi Chú
 
 - Không nên đưa toàn bộ dataset vào repo vì dung lượng lớn.
 - Các file trong `src/` hiện là nơi để tách code dùng chung khi project được hoàn thiện.
 - Các kết quả huấn luyện nên được lưu vào `outputs/` để dễ kiểm tra và so sánh.
+
+## M3: MobileNetV2 Transfer Learning
+
+Toàn bộ code riêng của M3 nằm trong notebook
+`notebooks/05_transfer_learning.ipynb`. Notebook chỉ dùng các hàm xử lý dữ liệu
+đã có trong `src/data_utils.py`; các hàm xây dựng model, huấn luyện và đánh giá
+được viết ngay trong notebook để dễ theo dõi.
+
+Mở notebook và chạy các cell theo thứ tự. Giai đoạn 1 chỉ train classifier mới.
+Giai đoạn 2 nạp checkpoint tốt nhất của giai đoạn 1, mở 3 block cuối và train
+với learning rate nhỏ hơn.
+
+Checkpoint, history, cấu hình, confusion matrix và classification report được lưu
+trong `outputs/models/` và `outputs/results/`. Có thể đặt `IMAGE_PATH` ở cell cuối
+để dự đoán một ảnh sau khi đã train.
