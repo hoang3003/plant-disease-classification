@@ -3,4 +3,7 @@
 __pycache__/
 *.py[cod]
 data/processed_rgb/
+data/.processed_rgb_staging/
+data/.processed_rgb_backup/
+outputs/results/.processed_data_staging.csv
 outputs/models/*.pt
