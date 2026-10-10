@@ -12,6 +12,8 @@
     "near_duplicate_issues": "data/metadata/near_duplicates.csv",
     "data_split": "outputs/results/data_split.csv",
     "class_names": "outputs/results/class_names.json",
+    "processed_images": "data/processed_rgb/images",
+    "processed_manifest": "outputs/results/processed_data.csv",
     "same_class_candidate_report": "outputs/results/same_class_near_duplicate_candidates.csv",
     "cross_class_candidate_report": "outputs/results/cross_class_near_duplicate_candidates.csv"
   },
@@ -49,6 +51,16 @@
     "validation": 5427,
     "test": 10873
   },
+  "materialized_images": {
+    "color": "RGB",
+    "size": [
+      224,
+      224
+    ],
+    "format": "JPEG",
+    "quality": 95,
+    "layout": "images/{filename}; labels and splits in processed_data.csv"
+  },
   "custom_cnn_preprocessing": {
     "color": "RGB",
     "resize": [
@@ -71,5 +83,5 @@
     "validation_augmentation": null,
     "test_augmentation": null
   },
-  "transfer_learning_preprocessing": "Dùng make_transfer_transforms(weights) với đúng bộ trọng số pretrained đã chọn; phép chuẩn hóa lấy từ weights.transforms()."
+  "transfer_learning_preprocessing": "Ảnh đã là RGB 224x224; notebook model chỉ chuyển tensor và chuẩn hóa theo mean/std của pretrained weights."
 }
