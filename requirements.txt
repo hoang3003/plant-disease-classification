@@ -18,6 +18,7 @@ python-dotenv==1.2.3
 PyWavelets==1.10.0
 scikit-learn==1.9.1
 scipy==1.18.1
+seaborn==0.13.2
 six==1.17.0
 threadpoolctl==3.7.0
 tqdm==4.67.1
