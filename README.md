@@ -159,19 +159,18 @@ là leakage.
 
 - Không nên đưa toàn bộ dataset vào repo vì dung lượng lớn.
 - `01_eda.ipynb` và `02_preprocessing.ipynb` tự chứa các hàm xử lý dữ liệu cần thiết.
-- Các kết quả huấn luyện nên được lưu vào `outputs/` để dễ kiểm tra và so sánh.
+- Chỉ lưu kết quả huấn luyện vào `outputs/` khi thực sự cần dùng lại.
 
 ## M3: MobileNetV2 Transfer Learning
 
 Toàn bộ code riêng của M3 nằm trong notebook
-`notebooks/05_transfer_learning.ipynb`. Notebook đọc `processed_data.csv`, lọc theo
-cột `split` và mở ảnh qua `processed_path`; các hàm
-xây dựng model, huấn luyện và đánh giá được viết ngay trong notebook để dễ theo dõi.
+`notebooks/05_transfer_learning.ipynb`. Notebook đọc `preprocessing_data.csv`, lọc
+theo cột `split` và mở ảnh gốc qua `relative_path`. Các hàm xây dựng model, huấn
+luyện và đánh giá được viết ngay trong notebook để dễ theo dõi.
 
 Mở notebook và chạy các cell theo thứ tự. Giai đoạn 1 chỉ train classifier mới.
-Giai đoạn 2 nạp checkpoint tốt nhất của giai đoạn 1, mở 3 block cuối và train
-với learning rate nhỏ hơn.
+Giai đoạn 2 dùng lại trọng số tốt nhất đang giữ trong RAM, mở 3 block cuối và
+train với learning rate nhỏ hơn.
 
-Checkpoint, history, cấu hình, confusion matrix và classification report được lưu
-trong `outputs/models/` và `outputs/results/`. Có thể đặt `IMAGE_PATH` ở cell cuối
-để dự đoán một ảnh sau khi đã train.
+Notebook hiển thị history, confusion matrix và classification report trực tiếp,
+không tự động ghi checkpoint hay báo cáo ra file.
