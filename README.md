@@ -8,18 +8,23 @@ Project này dùng bộ dữ liệu PlantVillage để xây dựng quy trình ph
 plant-disease-classification/
 ├── README.md
 ├── requirements.txt
+├── predict.py
 ├── notebooks/
 │   ├── 01_eda.ipynb
 │   ├── 02_preprocessing.ipynb
 │   ├── 03_simple_cnn.ipynb
-│   ├── 04_complex_cnn.ipynb       # file khung, chưa triển khai
+│   ├── 04_complex_cnn.ipynb
 │   └── 05_transfer_learning.ipynb
 ├── data/
-│   ├── metadata/
-│   └── processed_rgb/images/   # ảnh sinh bởi 02_preprocessing.ipynb, không commit
-└── outputs/
-    ├── models/
-    └── results/
+│   └── preprocessing_data.csv
+├── image test/
+│   ├── pepper1.jpg
+│   ├── tomato1.jpg
+│   └── tomato2.jpg
+└── outputs/models/
+    ├── simple.pt
+    ├── complex_cnn.pt
+    └── mobilenet_v2.pt
 ```
 
 ## Giải Thích Thư Mục Và File
@@ -42,19 +47,18 @@ Thư mục chứa các notebook theo từng bước của quy trình xây dựng
 | File                         | Mục đích                                                                                     |
 | ---------------------------- | -------------------------------------------------------------------------------------------- |
 | `01_eda.ipynb`               | Khám phá dữ liệu, thống kê lớp, tạo metadata và phát hiện ảnh trùng/gần trùng.               |
-| `02_preprocessing.ipynb`     | Làm sạch, chia train/validation/test, resize RGB 224×224 và lưu dữ liệu đã xử lý.            |
+| `02_preprocessing.ipynb`     | Loại ảnh trùng, chia train/validation/test và tạo manifest cho các mô hình.                  |
 | `03_simple_cnn.ipynb`        | Xây dựng và huấn luyện CNN cơ bản làm baseline.                                              |
-| `04_complex_cnn.ipynb`       | File khung dự kiến cho CNN phức tạp; hiện chưa có nội dung triển khai.                       |
+| `04_complex_cnn.ipynb`       | Xây dựng, huấn luyện và đánh giá CNN phức tạp có nhánh tích chập song song.                  |
 | `05_transfer_learning.ipynb` | Huấn luyện MobileNetV2 bằng transfer learning và fine-tuning, sau đó đánh giá trên tập test. |
 
 ### `outputs/`
 
 Thư mục lưu các kết quả sinh ra trong quá trình chạy notebook.
 
-| Thư mục            | Mục đích                                                   |
-| ------------------ | ---------------------------------------------------------- |
-| `outputs/models/`  | Lưu checkpoint hoặc file trọng số sinh ra khi huấn luyện.  |
-| `outputs/results/` | Lưu manifest, cấu hình, lịch sử train và báo cáo đánh giá. |
+| Thư mục           | Mục đích                                                  |
+| ----------------- | --------------------------------------------------------- |
+| `outputs/models/` | Lưu checkpoint tốt nhất của ba mô hình sau khi huấn luyện. |
 
 ## Dữ Liệu
 
@@ -85,24 +89,18 @@ DATA_DIR=C:/datasets/PlantVillage
 Nếu không có `.env`, notebook mặc định tìm thư mục `PlantVillage` nằm cạnh
 project. File `.env` chỉ chứa cấu hình riêng của từng máy và không được commit.
 
-Sau khi chạy `02_preprocessing.ipynb`, ảnh sạch được chuyển sang RGB, resize `224×224`
-và lưu trong một thư mục chung. Thông tin nhãn và split nằm trong CSV:
+`02_preprocessing.ipynb` kiểm tra ảnh trùng bằng MD5, loại các bản sao trùng hoàn
+toàn và tạo manifest dùng chung cho các notebook model:
 
 ```text
-data/processed_rgb/
-└── images/
-    ├── <image_1>.jpg
-    └── ...
-
-outputs/results/
-└── processed_data.csv
+data/
+└── preprocessing_data.csv
 ```
 
-Mỗi dòng `processed_data.csv` chứa `processed_path`, `class_name`, `class_id`, `split`
-và các cột truy vết từ `data_split.csv`. Thư mục ảnh được bỏ qua bởi Git; file CSV
-được giữ trong project. Augmentation không được ghi cố định vào validation/test;
-notebook train tạo augmentation ngẫu nhiên cho train và thực hiện normalization phù
-hợp với từng model.
+Mỗi dòng `preprocessing_data.csv` chứa `relative_path`, `class_name`, `class_id` và
+`split`. Ảnh gốc không được sao chép vào repo; các notebook mở ảnh qua
+`DATA_DIR`, chuyển sang RGB, resize về `224×224` và áp dụng transform phù hợp khi
+DataLoader đọc ảnh. Augmentation chỉ được áp dụng ngẫu nhiên cho tập train.
 
 ## Cách Chạy Project
 
@@ -135,25 +133,21 @@ Ba notebook model có thể chạy độc lập sau khi preprocessing hoàn tấ
 
 ## Kết Quả Tiền Xử Lý Hiện Tại
 
-Notebook `02_preprocessing.ipynb` tạo manifest và bộ ảnh RGB `224×224` với kết quả:
+Notebook `02_preprocessing.ipynb` tạo manifest với kết quả:
 
 | Split        | Số ảnh |  Tỉ lệ |
 | ------------ | -----: | -----: |
-| `train`      | 37,984 | 69.97% |
-| `validation` |  5,427 | 10.00% |
-| `test`       | 10,873 | 20.03% |
+| `train`      | 39,089 | 72.01% |
+| `validation` |  4,344 |  8.00% |
+| `test`       | 10,851 | 19.99% |
 
 Tổng số ảnh sau khi loại 21 bản sao trùng hoàn toàn: **54,284**
 Số nhãn: **38**
 
-Quy tắc chia: toàn bộ ảnh `val` gốc và các ảnh cùng `group_id` được đưa vào
-`test`. Phần `train` gốc còn lại được chia bằng `StratifiedGroupKFold` với
-8 folds, stratify theo `class_name` và group theo `group_id`.
-
-Kiểm tra split hiện tại: **0 group leakage**, **0 confirmed near-duplicate
-leakage**, và cả 38 lớp đều xuất hiện trong cả ba split. Có 622 near-duplicate
-ứng viên chưa được xác nhận nằm khác split; các ứng viên này không được kết luận
-là leakage.
+Quy tắc chia: sau khi loại ảnh trùng hoàn toàn, toàn bộ thư mục `val` gốc được dùng
+làm tập `test`. Phần `train` gốc được chia train/validation theo tỉ lệ 90/10 bằng
+`train_test_split`, stratify theo `class_name` và dùng `random_state=42`. Cả ba
+split đều có đủ 38 lớp.
 
 ## Ghi Chú
 
@@ -197,7 +191,7 @@ Thư mục `outputs/models/` cần có checkpoint tương ứng với model mu�
 
 ```text
 outputs/models/
-├── simple_cnn.pt       # tạo bởi 03_simple_cnn.ipynb
+├── simple.pt           # tạo bởi 03_simple_cnn.ipynb
 ├── complex_cnn.pt      # tạo bởi 04_complex_cnn.ipynb
 └── mobilenet_v2.pt     # tạo bởi 05_transfer_learning.ipynb
 ```
@@ -212,8 +206,8 @@ chỉ cần checkpoint, không cần chạy lại notebook.
 cập, ví dụ:
 
 ```text
-test_images/
-└── tomato_leaf.jpg
+image test/
+└── tomato1.jpg
 ```
 
 Không cần resize hoặc normalize ảnh trước. `predict.py` tự chuyển ảnh sang RGB,
@@ -224,19 +218,19 @@ resize về `224×224` và áp dụng transform đánh giá đúng với model �
 Simple CNN:
 
 ```powershell
-python predict.py --model simple --image ".\test_images\tomato_leaf.jpg"
+python predict.py --model simple --image ".\image test\tomato1.jpg"
 ```
 
 Complex CNN:
 
 ```powershell
-python predict.py --model complex --image ".\test_images\tomato_leaf.jpg"
+python predict.py --model complex --image ".\image test\tomato1.jpg"
 ```
 
 MobileNetV2:
 
 ```powershell
-python predict.py --model mobilenet --image ".\test_images\tomato_leaf.jpg"
+python predict.py --model mobilenet --image ".\image test\tomato1.jpg"
 ```
 
 Cũng có thể truyền đường dẫn tuyệt đối tới ảnh, đặc biệt khi đường dẫn nằm ngoài
@@ -250,13 +244,13 @@ Ví dụ kết quả:
 
 ```text
 Model: mobilenet
-Ảnh: C:\...\test_images\tomato_leaf.jpg
+Ảnh: C:\...\image test\tomato1.jpg
 Dự đoán: Tomato___Late_blight
-Xác suất: 96.42%
+Xác suất: 94.68%
 Top 3 dự đoán:
-  1. Tomato___Late_blight: 96.42%
-  2. Tomato___Early_blight: 2.31%
-  3. Tomato___Septoria_leaf_spot: 0.84%
+  1. Tomato___Late_blight: 94.68%
+  2. Tomato___Early_blight: 2.35%
+  3. Pepper,_bell___Bacterial_spot: 1.58%
 ```
 
 Nếu thiếu ảnh, thiếu checkpoint hoặc checkpoint không khớp kiến trúc,
