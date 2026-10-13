@@ -39,21 +39,21 @@ có thiết bị tăng tốc phù hợp.
 
 Thư mục chứa các notebook theo từng bước của quy trình xây dựng mô hình.
 
-| File                         | Mục đích                                                                                       |
-| ---------------------------- | -------------------------------------------------------------------------------------------------- |
-| `01_eda.ipynb`               | Khám phá dữ liệu, thống kê lớp, tạo metadata và phát hiện ảnh trùng/gần trùng.          |
-| `02_preprocessing.ipynb`     | Làm sạch, chia train/validation/test, resize RGB 224×224 và lưu dữ liệu đã xử lý.     |
-| `03_simple_cnn.ipynb`        | Xây dựng và huấn luyện CNN cơ bản làm baseline.                                          |
-| `04_complex_cnn.ipynb`       | File khung dự kiến cho CNN phức tạp; hiện chưa có nội dung triển khai.                         |
+| File                         | Mục đích                                                                                     |
+| ---------------------------- | -------------------------------------------------------------------------------------------- |
+| `01_eda.ipynb`               | Khám phá dữ liệu, thống kê lớp, tạo metadata và phát hiện ảnh trùng/gần trùng.               |
+| `02_preprocessing.ipynb`     | Làm sạch, chia train/validation/test, resize RGB 224×224 và lưu dữ liệu đã xử lý.            |
+| `03_simple_cnn.ipynb`        | Xây dựng và huấn luyện CNN cơ bản làm baseline.                                              |
+| `04_complex_cnn.ipynb`       | File khung dự kiến cho CNN phức tạp; hiện chưa có nội dung triển khai.                       |
 | `05_transfer_learning.ipynb` | Huấn luyện MobileNetV2 bằng transfer learning và fine-tuning, sau đó đánh giá trên tập test. |
 
 ### `outputs/`
 
 Thư mục lưu các kết quả sinh ra trong quá trình chạy notebook.
 
-| Thư mục            | Mục đích                                                         |
-| ------------------ | ---------------------------------------------------------------- |
-| `outputs/models/`  | Lưu checkpoint hoặc file trọng số sinh ra khi huấn luyện.       |
+| Thư mục            | Mục đích                                                   |
+| ------------------ | ---------------------------------------------------------- |
+| `outputs/models/`  | Lưu checkpoint hoặc file trọng số sinh ra khi huấn luyện.  |
 | `outputs/results/` | Lưu manifest, cấu hình, lịch sử train và báo cáo đánh giá. |
 
 ## Dữ Liệu
@@ -127,11 +127,11 @@ pip install -r requirements.txt
 01_eda.ipynb
 02_preprocessing.ipynb
 ├── 03_simple_cnn.ipynb          # CNN baseline
-└── 05_transfer_learning.ipynb  # MobileNetV2
+├── 04_complex_cnn.ipynb         # Complex CNN
+└── 05_transfer_learning.ipynb   # MobileNetV2
 ```
 
-Hai notebook model có thể chạy độc lập sau khi preprocessing hoàn tất. Notebook
-`04_complex_cnn.ipynb` chưa triển khai nên không nằm trong quy trình chạy hiện tại.
+Ba notebook model có thể chạy độc lập sau khi preprocessing hoàn tất.
 
 ## Kết Quả Tiền Xử Lý Hiện Tại
 
@@ -172,5 +172,92 @@ Mở notebook và chạy các cell theo thứ tự. Giai đoạn 1 chỉ train c
 Giai đoạn 2 dùng lại trọng số tốt nhất đang giữ trong RAM, mở 3 block cuối và
 train với learning rate nhỏ hơn.
 
-Notebook hiển thị history, confusion matrix và classification report trực tiếp,
-không tự động ghi checkpoint hay báo cáo ra file.
+Notebook hiển thị history, confusion matrix và classification report trực tiếp.
+Sau khi chọn trọng số tốt nhất, notebook lưu checkpoint vào
+`outputs/models/mobilenet_v2.pt`.
+
+## Chạy Dự Đoán Bằng `predict.py`
+
+`predict.py` dùng checkpoint đã huấn luyện để dự đoán một ảnh lá cây. File này
+chỉ thực hiện inference, không chạy lại quá trình train.
+
+### 1. Chuẩn bị môi trường
+
+Mở terminal VS Code tại thư mục gốc của project, sau đó kích hoạt môi trường và
+cài các thư viện:
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
+```
+
+### 2. Chuẩn bị checkpoint
+
+Thư mục `outputs/models/` cần có checkpoint tương ứng với model muốn dùng:
+
+```text
+outputs/models/
+├── simple_cnn.pt       # tạo bởi 03_simple_cnn.ipynb
+├── complex_cnn.pt      # tạo bởi 04_complex_cnn.ipynb
+└── mobilenet_v2.pt     # tạo bởi 05_transfer_learning.ipynb
+```
+
+Nếu chưa có checkpoint, chạy notebook model tương ứng một lần. Mỗi notebook sẽ
+lưu trọng số có validation loss tốt nhất sau khi train. Những lần dự đoán sau
+chỉ cần checkpoint, không cần chạy lại notebook.
+
+### 3. Chuẩn bị ảnh
+
+Đặt một ảnh lá cây định dạng như `.jpg`, `.jpeg` hoặc `.png` vào vị trí dễ truy
+cập, ví dụ:
+
+```text
+test_images/
+└── tomato_leaf.jpg
+```
+
+Không cần resize hoặc normalize ảnh trước. `predict.py` tự chuyển ảnh sang RGB,
+resize về `224×224` và áp dụng transform đánh giá đúng với model được chọn.
+
+### 4. Chạy dự đoán
+
+Simple CNN:
+
+```powershell
+python predict.py --model simple --image ".\test_images\tomato_leaf.jpg"
+```
+
+Complex CNN:
+
+```powershell
+python predict.py --model complex --image ".\test_images\tomato_leaf.jpg"
+```
+
+MobileNetV2:
+
+```powershell
+python predict.py --model mobilenet --image ".\test_images\tomato_leaf.jpg"
+```
+
+Cũng có thể truyền đường dẫn tuyệt đối tới ảnh, đặc biệt khi đường dẫn nằm ngoài
+project hoặc có khoảng trắng:
+
+```powershell
+python predict.py --model mobilenet --image "C:\Users\MY PC\Pictures\tomato_leaf.jpg"
+```
+
+Ví dụ kết quả:
+
+```text
+Model: mobilenet
+Ảnh: C:\...\test_images\tomato_leaf.jpg
+Dự đoán: Tomato___Late_blight
+Xác suất: 96.42%
+Top 3 dự đoán:
+  1. Tomato___Late_blight: 96.42%
+  2. Tomato___Early_blight: 2.31%
+  3. Tomato___Septoria_leaf_spot: 0.84%
+```
+
+Nếu thiếu ảnh, thiếu checkpoint hoặc checkpoint không khớp kiến trúc,
+`predict.py` sẽ dừng và in thông báo lỗi tương ứng.
