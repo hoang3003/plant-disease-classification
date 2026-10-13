@@ -13,7 +13,7 @@ PROJECT_DIR = Path(__file__).resolve().parent
 MODELS_DIR = PROJECT_DIR / "outputs" / "models"
 
 MODEL_PATHS = {
-    "simple": MODELS_DIR / "simple_cnn.pt",
+    "simple": MODELS_DIR / "simple.pt",
     "complex": MODELS_DIR / "complex_cnn.pt",
     "mobilenet": MODELS_DIR / "mobilenet_v2.pt",
 }
