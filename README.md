@@ -10,7 +10,6 @@ plant-disease-classification/
 ├── requirements.txt
 ├── predict.py
 ├── notebooks/
-│   ├── 01_eda.ipynb
 │   ├── 02_preprocessing.ipynb
 │   ├── 03_simple_cnn.ipynb
 │   ├── 04_complex_cnn.ipynb
@@ -37,8 +36,8 @@ File mô tả tổng quan project, cấu trúc thư mục, cách chuẩn bị d�
 
 File khai báo các thư viện Python cần cho project, bao gồm PyTorch,
 torchvision, pandas, NumPy, Pillow, Matplotlib, ImageHash và scikit-learn. Cấu hình
-mặc định không bắt buộc phải có GPU; các notebook model tự chọn CPU khi không
-có thiết bị tăng tốc phù hợp.
+mặc định không bắt buộc phải có GPU. Simple CNN và MobileNetV2 có thể chạy trên
+CPU; Complex CNN hiện dùng mixed precision và augmentation trên GPU nên cần CUDA.
 
 ### `notebooks/`
 
@@ -46,7 +45,6 @@ Thư mục chứa các notebook theo từng bước của quy trình xây dựng
 
 | File                         | Mục đích                                                                                     |
 | ---------------------------- | -------------------------------------------------------------------------------------------- |
-| `01_eda.ipynb`               | Khám phá dữ liệu, thống kê lớp, tạo metadata và phát hiện ảnh trùng/gần trùng.               |
 | `02_preprocessing.ipynb`     | Loại ảnh trùng, chia train/validation/test và tạo manifest cho các mô hình.                  |
 | `03_simple_cnn.ipynb`        | Xây dựng và huấn luyện CNN cơ bản làm baseline.                                              |
 | `04_complex_cnn.ipynb`       | Xây dựng, huấn luyện và đánh giá CNN phức tạp có nhánh tích chập song song.                  |
@@ -122,7 +120,6 @@ pip install -r requirements.txt
 4. Mở Jupyter Notebook hoặc VS Code, sau đó chạy:
 
 ```text
-01_eda.ipynb
 02_preprocessing.ipynb
 ├── 03_simple_cnn.ipynb          # CNN baseline
 ├── 04_complex_cnn.ipynb         # Complex CNN
@@ -152,7 +149,7 @@ split đều có đủ 38 lớp.
 ## Ghi Chú
 
 - Không nên đưa toàn bộ dataset vào repo vì dung lượng lớn.
-- `01_eda.ipynb` và `02_preprocessing.ipynb` tự chứa các hàm xử lý dữ liệu cần thiết.
+- `02_preprocessing.ipynb` tự chứa các hàm xử lý dữ liệu cần thiết.
 - Chỉ lưu kết quả huấn luyện vào `outputs/` khi thực sự cần dùng lại.
 
 ## M3: MobileNetV2 Transfer Learning
@@ -166,7 +163,7 @@ Mở notebook và chạy các cell theo thứ tự. Giai đoạn 1 chỉ train c
 Giai đoạn 2 dùng lại trọng số tốt nhất đang giữ trong RAM, mở 3 block cuối và
 train với learning rate nhỏ hơn.
 
-Notebook hiển thị history, confusion matrix và classification report trực tiếp.
+Notebook hiển thị history và classification report trực tiếp.
 Sau khi chọn trọng số tốt nhất, notebook lưu checkpoint vào
 `outputs/models/mobilenet_v2.pt`.
 
